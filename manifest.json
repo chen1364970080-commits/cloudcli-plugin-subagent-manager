@@ -1,0 +1,13 @@
+{
+  "name": "subagent-manager",
+  "displayName": "Subagent Manager",
+  "version": "1.0.0",
+  "description": "Monitor and manage Claude Code subagents — view status, tool counts, model usage, and control agent lifecycle.",
+  "author": "CloudCLI UI",
+  "icon": "icon.svg",
+  "type": "module",
+  "slot": "tab",
+  "entry": "dist/index.js",
+  "server": "dist/server.js",
+  "permissions": []
+}
