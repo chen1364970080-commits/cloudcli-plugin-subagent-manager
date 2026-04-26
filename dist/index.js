@@ -279,6 +279,7 @@ export function mount(container, api) {
     let cached = null;
     let loading = false;
     let currentPath = null;
+    let firstLoad = true;
     async function loadAgents() {
         const ctx = api.context;
         const projectPath = ctx.project?.path ?? null;
@@ -292,12 +293,17 @@ export function mount(container, api) {
             renderAgents(root, ctx, null, false);
             return;
         }
-        loading = true;
+        // Only show skeleton on first load — keep old content visible during project changes
+        if (firstLoad) {
+            loading = true;
+            firstLoad = false;
+        }
         currentPath = projectPath;
         renderAgents(root, ctx, cached, loading);
         try {
             const data = (await api.rpc('GET', `agents?path=${encodeURIComponent(projectPath)}`));
             cached = data;
+            loading = false;
             renderAgents(root, ctx, data, false);
         }
         catch (err) {

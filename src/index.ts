@@ -325,6 +325,7 @@ export function mount(container: HTMLElement, api: PluginAPI): void {
   let cached: AgentListResponse | null = null;
   let loading = false;
   let currentPath: string | null = null;
+  let firstLoad = true;
 
   async function loadAgents(): Promise<void> {
     const ctx = api.context;
@@ -342,13 +343,18 @@ export function mount(container: HTMLElement, api: PluginAPI): void {
       return;
     }
 
-    loading = true;
+    // Only show skeleton on first load — keep old content visible during project changes
+    if (firstLoad) {
+      loading = true;
+      firstLoad = false;
+    }
     currentPath = projectPath;
     renderAgents(root, ctx, cached, loading);
 
     try {
       const data = (await api.rpc('GET', `agents?path=${encodeURIComponent(projectPath)}`)) as AgentListResponse;
       cached = data;
+      loading = false;
       renderAgents(root, ctx, data, false);
     } catch (err) {
       loading = false;
