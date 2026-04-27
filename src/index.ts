@@ -172,17 +172,19 @@ function renderAgents(root: HTMLElement, ctx: PluginContext, data: AgentListResp
   }
   headerHtml += `</div>`;
 
-  if (data && data.projectPath) {
-    headerHtml += `
-      <div style="
-        font-size:0.65rem;color:${c.muted};
-        max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      " title="${data.projectPath}">
-        ${data.agents.length} agent${data.agents.length !== 1 ? 's' : ''} found
-      </div>
-    `;
-  }
-  headerHtml += `</div>`;
+  headerHtml += `
+    <div style="display:flex;align-items:center;gap:8px">
+      ${data && data.projectPath ? `<span style="font-size:0.65rem;color:${c.muted}">${data.agents.length} agent${data.agents.length !== 1 ? 's' : ''}</span>` : ''}
+      <button id="sm-refresh-btn" style="
+        background:none;border:1px solid ${c.border};cursor:pointer;
+        color:${c.muted};padding:4px 8px;border-radius:4px;
+        font-family:${c.mono};font-size:0.65rem;display:flex;align-items:center;gap:4px;
+        transition:all 0.15s;
+      " title="Refresh">
+        ↻
+      </button>
+    </div>
+  `;
 
   // Content
   let contentHtml = `<div id="sm-content" style="padding:16px 24px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;height:calc(100% - 60px)">`;
@@ -309,8 +311,6 @@ subagents are tracked per project</pre>
 
 // ── Mount / Unmount ────────────────────────────────────────────────────
 
-let pollInterval: ReturnType<typeof setInterval> | null = null;
-
 export function mount(container: HTMLElement, api: PluginAPI): void {
   ensureStyles();
 
@@ -371,8 +371,14 @@ export function mount(container: HTMLElement, api: PluginAPI): void {
 
   loadAgents();
 
-  // Poll every 3 seconds
-  pollInterval = setInterval(loadAgents, 3000);
+  // Wire refresh button
+  root.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('#sm-refresh-btn');
+    if (btn) {
+      currentPath = null;
+      loadAgents();
+    }
+  });
 
   // React to context changes
   const unsubscribe = api.onContextChange(() => {
@@ -384,10 +390,6 @@ export function mount(container: HTMLElement, api: PluginAPI): void {
 }
 
 export function unmount(container: HTMLElement): void {
-  if (pollInterval !== null) {
-    clearInterval(pollInterval);
-    pollInterval = null;
-  }
   if (typeof (container as any)._smUnsubscribe === 'function') {
     (container as any)._smUnsubscribe();
     delete (container as any)._smUnsubscribe;
